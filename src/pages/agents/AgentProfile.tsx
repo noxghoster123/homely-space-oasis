@@ -2,71 +2,43 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  MapPin, Phone, Mail, Globe, Star, Calendar, Home, User, MessageSquare, 
-  Facebook, Twitter, Instagram, Linkedin, Clock, CheckCircle
-} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  MapPin, Phone, Mail, Calendar, MessageSquare, Home, Star, 
+  Facebook, Twitter, Instagram, Linkedin
+} from "lucide-react";
 
-// Mock data for agency
-const mockAgency = {
-  id: 1,
-  name: "Elite Real Estate Group",
-  logo: "https://via.placeholder.com/150",
+// Mock agent data
+const mockAgent = {
+  id: 101,
+  name: "Sarah Johnson",
+  title: "Senior Real Estate Agent",
+  image: "https://via.placeholder.com/300",
   cover: "https://via.placeholder.com/1200x400",
-  rating: 4.8,
-  reviews: 127,
-  description: "Elite Real Estate Group is a premier real estate agency specializing in luxury properties across major cities. With over 15 years of experience, our team of expert agents provides personalized service to help clients find their dream homes or investment properties.",
-  location: "123 Madison Avenue, New York, NY 10016",
-  phone: "+1 (212) 456-7890",
-  email: "info@eliterealestate.com",
-  website: "www.eliterealestate.com",
-  founded: "2008",
-  agentCount: 24,
-  propertyCount: 48,
-  subscription: "premium",
-  operatingHours: "Monday to Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 4:00 PM\nSunday: Closed",
-  socialMedia: {
-    facebook: "https://facebook.com/eliterealestate",
-    twitter: "https://twitter.com/eliterealestate",
-    instagram: "https://instagram.com/eliterealestate",
-    linkedin: "https://linkedin.com/company/eliterealestate",
+  bio: "With over 10 years of experience in luxury real estate, Sarah has helped hundreds of clients find their dream homes. Specializing in high-end properties and waterfront estates, she brings unparalleled expertise and a personalized approach to every transaction.",
+  phone: "+1 (212) 555-7890",
+  email: "sarah.johnson@eliterealestate.com",
+  location: "New York, NY",
+  agency: {
+    id: 1,
+    name: "Elite Real Estate Group",
+    logo: "https://via.placeholder.com/100"
   },
-  specializations: ["Luxury Properties", "Commercial Real Estate", "Investment Properties", "Residential Homes"],
-  agents: [
-    {
-      id: 101,
-      name: "Sarah Johnson",
-      image: "https://via.placeholder.com/100",
-      title: "Senior Agent",
-      properties: 12,
-    },
-    {
-      id: 102,
-      name: "Michael Chen",
-      image: "https://via.placeholder.com/100",
-      title: "Luxury Property Specialist",
-      properties: 9,
-    },
-    {
-      id: 103,
-      name: "Emily Rodriguez",
-      image: "https://via.placeholder.com/100",
-      title: "Commercial Agent",
-      properties: 7,
-    },
-    {
-      id: 104,
-      name: "David Kim",
-      image: "https://via.placeholder.com/100",
-      title: "Investment Advisor",
-      properties: 11,
-    },
-  ],
+  rating: 4.9,
+  reviews: 87,
+  experience: "10+ years",
+  languages: ["English", "Spanish", "French"],
+  certifications: ["Certified Luxury Home Marketing Specialist", "Accredited Buyer's Representative", "Certified Residential Specialist"],
+  socialMedia: {
+    facebook: "https://facebook.com/sarahjohnson",
+    twitter: "https://twitter.com/sarahjohnson",
+    instagram: "https://instagram.com/sarahjohnson",
+    linkedin: "https://linkedin.com/in/sarahjohnson",
+  },
   properties: [
     {
       id: 201,
@@ -97,27 +69,33 @@ const mockAgency = {
       baths: 4.5,
       sqft: 4200,
       location: "Hamptons, NY",
-    },
+    }
+  ],
+  recentSales: [
     {
-      id: 204,
-      title: "Renovated Brownstone Townhouse",
+      id: 301,
+      title: "Luxury Condo on Park Avenue",
       image: "https://via.placeholder.com/300x200",
       price: "$3,200,000",
-      beds: 4,
-      baths: 3,
-      sqft: 3000,
-      location: "Upper East Side, NY",
+      date: "2 months ago",
     },
+    {
+      id: 302,
+      title: "Brownstone in Brooklyn Heights",
+      image: "https://via.placeholder.com/300x200",
+      price: "$2,800,000",
+      date: "3 months ago",
+    }
   ]
 };
 
-const AgencyDetail = () => {
+const AgentProfile = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const [messageText, setMessageText] = useState("");
   
-  // In a real app, you would fetch the agency data based on the ID
-  const agency = mockAgency;
+  // In a real app, you would fetch agent data based on ID
+  const agent = mockAgent;
   
   const handleSendMessage = () => {
     if (!messageText.trim()) {
@@ -130,20 +108,20 @@ const AgencyDetail = () => {
     }
     
     // Here you would send the message to your backend
-    console.log("Sending message to agency:", messageText);
+    console.log("Sending message to agent:", messageText);
     
     toast({
       title: "Message sent",
-      description: "The agency will respond to you shortly.",
+      description: "The agent will respond to you shortly.",
     });
     
     setMessageText("");
   };
 
-  const handleScheduleTour = () => {
+  const handleScheduleCall = () => {
     toast({
-      title: "Tour request sent",
-      description: "A representative will contact you to schedule a visit.",
+      title: "Call request sent",
+      description: "The agent will contact you to schedule a call.",
     });
   };
 
@@ -152,8 +130,8 @@ const AgencyDetail = () => {
       {/* Cover Image */}
       <div className="relative h-64 md:h-80 bg-estate-100 overflow-hidden">
         <img 
-          src={agency.cover} 
-          alt={`${agency.name} cover`}
+          src={agent.cover} 
+          alt={`${agent.name} cover`}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -161,14 +139,14 @@ const AgencyDetail = () => {
       
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-6xl mx-auto">
-          {/* Agency Header */}
+          {/* Agent Profile Header */}
           <div className="relative -mt-20 mb-8">
             <div className="bg-white rounded-xl shadow-subtle p-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="relative md:w-32 md:h-32 w-24 h-24 rounded-xl overflow-hidden border-4 border-white shadow-md -mt-16">
+                <div className="relative md:w-32 md:h-32 w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md -mt-16">
                   <img 
-                    src={agency.logo} 
-                    alt={`${agency.name} logo`}
+                    src={agent.image} 
+                    alt={`${agent.name}`}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -176,31 +154,30 @@ const AgencyDetail = () => {
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-3xl font-display font-bold text-estate-900">{agency.name}</h1>
+                      <h1 className="text-3xl font-display font-bold text-estate-900">{agent.name}</h1>
+                      <p className="text-estate-600">{agent.title}</p>
                       <div className="flex items-center mt-2">
-                        <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                        <span className="ml-1 text-estate-800 font-medium">{agency.rating}</span>
-                        <span className="ml-1 text-estate-500">({agency.reviews} reviews)</span>
-                        <span className={`ml-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          agency.subscription === 'golden' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : agency.subscription === 'premium' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {agency.subscription.charAt(0).toUpperCase() + agency.subscription.slice(1)}
-                        </span>
+                        <Link to={`/agencies/${agent.agency.id}`} className="flex items-center text-estate-600 hover:text-estate-900">
+                          <img src={agent.agency.logo} alt={agent.agency.name} className="w-5 h-5 mr-2" />
+                          {agent.agency.name}
+                        </Link>
+                        <span className="mx-2">•</span>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className="ml-1 text-estate-800 font-medium">{agent.rating}</span>
+                          <span className="ml-1 text-estate-500">({agent.reviews} reviews)</span>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="flex gap-3">
-                      <Button variant="outline" onClick={handleScheduleTour}>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Schedule Tour
+                      <Button variant="outline" onClick={handleScheduleCall}>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Schedule Call
                       </Button>
                       <Button>
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        Contact Agency
+                        Message
                       </Button>
                     </div>
                   </div>
@@ -217,7 +194,6 @@ const AgencyDetail = () => {
                 <TabsList className="w-full bg-white shadow-subtle rounded-t-xl border border-estate-100">
                   <TabsTrigger value="about" className="flex-1">About</TabsTrigger>
                   <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-                  <TabsTrigger value="agents" className="flex-1">Agents</TabsTrigger>
                   <TabsTrigger value="reviews" className="flex-1">Reviews</TabsTrigger>
                 </TabsList>
                 
@@ -225,16 +201,16 @@ const AgencyDetail = () => {
                 <TabsContent value="about" className="mt-6">
                   <Card>
                     <CardContent className="p-6">
-                      <h2 className="text-xl font-semibold text-estate-900 mb-4">About {agency.name}</h2>
-                      <p className="text-estate-700 mb-6">{agency.description}</p>
+                      <h2 className="text-xl font-semibold text-estate-900 mb-4">About {agent.name}</h2>
+                      <p className="text-estate-700 mb-6">{agent.bio}</p>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div className="space-y-4">
                           <div className="flex items-start space-x-3">
                             <MapPin className="w-5 h-5 text-estate-500 mt-0.5" />
                             <div>
-                              <h3 className="font-medium text-estate-800">Address</h3>
-                              <p className="text-estate-600">{agency.location}</p>
+                              <h3 className="font-medium text-estate-800">Location</h3>
+                              <p className="text-estate-600">{agent.location}</p>
                             </div>
                           </div>
                           
@@ -242,7 +218,7 @@ const AgencyDetail = () => {
                             <Phone className="w-5 h-5 text-estate-500 mt-0.5" />
                             <div>
                               <h3 className="font-medium text-estate-800">Phone</h3>
-                              <p className="text-estate-600">{agency.phone}</p>
+                              <p className="text-estate-600">{agent.phone}</p>
                             </div>
                           </div>
                           
@@ -250,25 +226,17 @@ const AgencyDetail = () => {
                             <Mail className="w-5 h-5 text-estate-500 mt-0.5" />
                             <div>
                               <h3 className="font-medium text-estate-800">Email</h3>
-                              <p className="text-estate-600">{agency.email}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start space-x-3">
-                            <Globe className="w-5 h-5 text-estate-500 mt-0.5" />
-                            <div>
-                              <h3 className="font-medium text-estate-800">Website</h3>
-                              <p className="text-estate-600">{agency.website}</p>
+                              <p className="text-estate-600">{agent.email}</p>
                             </div>
                           </div>
                         </div>
                         
                         <div className="space-y-4">
                           <div className="flex items-start space-x-3">
-                            <Clock className="w-5 h-5 text-estate-500 mt-0.5" />
+                            <Calendar className="w-5 h-5 text-estate-500 mt-0.5" />
                             <div>
-                              <h3 className="font-medium text-estate-800">Operating Hours</h3>
-                              <p className="text-estate-600 whitespace-pre-line">{agency.operatingHours}</p>
+                              <h3 className="font-medium text-estate-800">Experience</h3>
+                              <p className="text-estate-600">{agent.experience}</p>
                             </div>
                           </div>
                           
@@ -276,48 +244,48 @@ const AgencyDetail = () => {
                             <Home className="w-5 h-5 text-estate-500 mt-0.5" />
                             <div>
                               <h3 className="font-medium text-estate-800">Properties</h3>
-                              <p className="text-estate-600">{agency.propertyCount} Active Listings</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start space-x-3">
-                            <User className="w-5 h-5 text-estate-500 mt-0.5" />
-                            <div>
-                              <h3 className="font-medium text-estate-800">Agents</h3>
-                              <p className="text-estate-600">{agency.agentCount} Expert Agents</p>
+                              <p className="text-estate-600">{agent.properties.length} Active Listings</p>
                             </div>
                           </div>
                         </div>
                       </div>
                       
                       <div className="mb-8">
-                        <h3 className="font-medium text-estate-800 mb-3">Specializations</h3>
+                        <h3 className="font-medium text-estate-800 mb-3">Languages</h3>
                         <div className="flex flex-wrap gap-2">
-                          {agency.specializations.map((spec, index) => (
+                          {agent.languages.map((language, index) => (
                             <span 
                               key={index} 
                               className="inline-flex items-center px-3 py-1 rounded-full bg-estate-100 text-estate-800 text-sm"
                             >
-                              <CheckCircle className="w-4 h-4 mr-1 text-estate-500" />
-                              {spec}
+                              {language}
                             </span>
                           ))}
                         </div>
                       </div>
                       
+                      <div className="mb-8">
+                        <h3 className="font-medium text-estate-800 mb-3">Certifications</h3>
+                        <ul className="list-disc list-inside text-estate-700 space-y-1">
+                          {agent.certifications.map((cert, index) => (
+                            <li key={index}>{cert}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
                       <div>
-                        <h3 className="font-medium text-estate-800 mb-3">Social Media</h3>
+                        <h3 className="font-medium text-estate-800 mb-3">Connect</h3>
                         <div className="flex gap-4">
-                          <a href={agency.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
+                          <a href={agent.socialMedia.facebook} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
                             <Facebook className="w-5 h-5" />
                           </a>
-                          <a href={agency.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
+                          <a href={agent.socialMedia.twitter} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
                             <Twitter className="w-5 h-5" />
                           </a>
-                          <a href={agency.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
+                          <a href={agent.socialMedia.instagram} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
                             <Instagram className="w-5 h-5" />
                           </a>
-                          <a href={agency.socialMedia.linkedin} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
+                          <a href={agent.socialMedia.linkedin} target="_blank" rel="noopener noreferrer" className="text-estate-600 hover:text-estate-900">
                             <Linkedin className="w-5 h-5" />
                           </a>
                         </div>
@@ -330,15 +298,10 @@ const AgencyDetail = () => {
                 <TabsContent value="properties" className="mt-6">
                   <Card>
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-estate-900">Properties by {agency.name}</h2>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to="/properties">View All</Link>
-                        </Button>
-                      </div>
+                      <h2 className="text-xl font-semibold text-estate-900 mb-6">Properties by {agent.name}</h2>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {agency.properties.map((property) => (
+                        {agent.properties.map((property) => (
                           <Link key={property.id} to={`/properties/${property.id}`} className="group">
                             <div className="bg-white border border-estate-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                               <div className="aspect-video relative overflow-hidden">
@@ -369,45 +332,33 @@ const AgencyDetail = () => {
                           </Link>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                {/* Agents Tab */}
-                <TabsContent value="agents" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <h2 className="text-xl font-semibold text-estate-900 mb-6">Meet Our Agents</h2>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
-                        {agency.agents.map((agent) => (
-                          <div key={agent.id} className="bg-white border border-estate-100 rounded-xl overflow-hidden shadow-sm flex flex-col sm:flex-row">
-                            <div className="sm:w-1/3 overflow-hidden">
-                              <img 
-                                src={agent.image} 
-                                alt={agent.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            
-                            <div className="p-4 sm:w-2/3">
-                              <h3 className="font-medium text-estate-800">{agent.name}</h3>
-                              <p className="text-estate-500 text-sm">{agent.title}</p>
-                              
-                              <div className="flex items-center mt-3 text-sm text-estate-600">
-                                <Home className="w-4 h-4 mr-1 text-estate-500" />
-                                <span>{agent.properties} Properties</span>
+                      <div className="mt-8">
+                        <h2 className="text-xl font-semibold text-estate-900 mb-6">Recent Sales</h2>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {agent.recentSales.map((property) => (
+                            <div key={property.id} className="bg-white border border-estate-100 rounded-xl overflow-hidden shadow-sm">
+                              <div className="aspect-video relative overflow-hidden">
+                                <img 
+                                  src={property.image} 
+                                  alt={property.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <div className="bg-white/90 px-4 py-2 rounded text-estate-900 font-medium">
+                                    Sold for {property.price}
+                                  </div>
+                                </div>
                               </div>
                               
-                              <div className="mt-4 flex space-x-2">
-                                <Button size="sm" variant="outline" asChild>
-                                  <Link to={`/agent/profile/${agent.id}`}>View Profile</Link>
-                                </Button>
-                                <Button size="sm">Contact</Button>
+                              <div className="p-4">
+                                <h3 className="font-medium text-estate-800">{property.title}</h3>
+                                <p className="text-estate-500 text-sm mt-1">Sold {property.date}</p>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -417,21 +368,21 @@ const AgencyDetail = () => {
                 <TabsContent value="reviews" className="mt-6">
                   <Card>
                     <CardContent className="p-6">
-                      <h2 className="text-xl font-semibold text-estate-900 mb-4">Customer Reviews</h2>
+                      <h2 className="text-xl font-semibold text-estate-900 mb-4">Client Reviews</h2>
                       
                       <div className="bg-estate-50 p-4 rounded-lg mb-6">
                         <div className="flex items-center mb-3">
                           <Star className="h-10 w-10 text-yellow-500 fill-yellow-500" />
                           <div className="ml-2">
-                            <div className="text-3xl font-bold text-estate-900">{agency.rating}</div>
-                            <div className="text-estate-600 text-sm">{agency.reviews} reviews</div>
+                            <div className="text-3xl font-bold text-estate-900">{agent.rating}</div>
+                            <div className="text-estate-600 text-sm">{agent.reviews} reviews</div>
                           </div>
                         </div>
                         
                         <div className="flex items-center">
                           <div className="flex">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`h-5 w-5 ${i < Math.floor(agency.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-estate-300'}`} />
+                              <Star key={i} className={`h-5 w-5 ${i < Math.floor(agent.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-estate-300'}`} />
                             ))}
                           </div>
                           <Button className="ml-auto" size="sm">Write a Review</Button>
@@ -440,7 +391,7 @@ const AgencyDetail = () => {
                       
                       {/* Reviews would go here, using mock data or fetched from backend */}
                       <div className="text-center py-6 text-estate-600">
-                        Sign in to view and write reviews for this agency.
+                        Sign in to view and write reviews for this agent.
                       </div>
                     </CardContent>
                   </Card>
@@ -452,7 +403,7 @@ const AgencyDetail = () => {
             <div>
               <Card className="sticky top-20">
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold text-estate-900 mb-4">Contact {agency.name}</h2>
+                  <h2 className="text-xl font-semibold text-estate-900 mb-4">Contact {agent.name}</h2>
                   
                   <Textarea
                     placeholder="Type your message here..."
@@ -472,17 +423,17 @@ const AgencyDetail = () => {
                     <div className="space-y-3">
                       <div className="flex items-center text-estate-600">
                         <Phone className="w-4 h-4 mr-3 text-estate-500" />
-                        <span>{agency.phone}</span>
+                        <span>{agent.phone}</span>
                       </div>
                       
                       <div className="flex items-center text-estate-600">
                         <Mail className="w-4 h-4 mr-3 text-estate-500" />
-                        <span>{agency.email}</span>
+                        <span>{agent.email}</span>
                       </div>
                       
                       <div className="flex items-center text-estate-600">
-                        <Globe className="w-4 h-4 mr-3 text-estate-500" />
-                        <span>{agency.website}</span>
+                        <MapPin className="w-4 h-4 mr-3 text-estate-500" />
+                        <span>{agent.location}</span>
                       </div>
                     </div>
                   </div>
@@ -496,4 +447,4 @@ const AgencyDetail = () => {
   );
 };
 
-export default AgencyDetail;
+export default AgentProfile;
