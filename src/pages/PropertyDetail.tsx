@@ -17,7 +17,8 @@ import {
   WifiIcon,
   Utensils,
   Tv,
-  AirVent
+  AirVent,
+  Calculator
 } from "lucide-react";
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -29,6 +30,7 @@ import {
   TooltipTrigger,
   TooltipProvider 
 } from "@/components/ui/tooltip";
+import { MortgageCalculator } from "@/components/property/MortgageCalculator";
 
 const property = {
   id: 1,
@@ -254,6 +256,10 @@ const PropertyDetail = () => {
               <TabsTrigger value="location" className="text-sm rounded-md data-[state=active]:bg-estate-800 data-[state=active]:text-white">
                 Location
               </TabsTrigger>
+              <TabsTrigger value="calculator" className="text-sm rounded-md data-[state=active]:bg-estate-800 data-[state=active]:text-white">
+                <Calculator className="h-4 w-4 mr-1" />
+                Mortgage
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="overview" className="mt-0">
@@ -313,6 +319,14 @@ const PropertyDetail = () => {
                 <div className="aspect-[16/9] bg-estate-100 rounded-lg flex items-center justify-center">
                   <Map className="h-12 w-12 text-estate-300" />
                   <span className="ml-4 text-estate-500 font-medium">Interactive Map (Coming Soon)</span>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="calculator" className="mt-0">
+              <div className="bg-white rounded-xl p-6 border border-estate-100 shadow-subtle">
+                <div className="max-w-lg mx-auto">
+                  <MortgageCalculator propertyPrice={property.price} />
                 </div>
               </div>
             </TabsContent>
