@@ -1,10 +1,11 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, Home, Map } from "lucide-react";
+import { Calculator, Home, Map, Video3d } from "lucide-react";
 import { PropertyOverview } from "./PropertyOverview";
 import { PropertyFeatures } from "./PropertyFeatures";
 import { PropertyLocation } from "./PropertyLocation";
 import { MortgageCalculator } from "./MortgageCalculator";
+import { Property3DTour } from "./Property3DTour";
 
 interface PropertyTabsProps {
   property: {
@@ -16,6 +17,7 @@ interface PropertyTabsProps {
     features: string[];
     address: string;
     price: number;
+    tour3dUrl?: string;
   };
   amenityIcons: Record<string, React.ElementType>;
 }
@@ -32,6 +34,10 @@ export function PropertyTabs({ property, amenityIcons }: PropertyTabsProps) {
             <TabsTrigger value="features" className="text-sm rounded-md data-[state=active]:bg-estate-800 data-[state=active]:text-white">
               Features & Amenities
             </TabsTrigger>
+            <TabsTrigger value="3dtour" className="text-sm rounded-md data-[state=active]:bg-estate-800 data-[state=active]:text-white">
+              <Video3d className="h-4 w-4 mr-1" />
+              3D Tour
+            </TabsTrigger>
             <TabsTrigger value="location" className="text-sm rounded-md data-[state=active]:bg-estate-800 data-[state=active]:text-white">
               Location
             </TabsTrigger>
@@ -47,6 +53,10 @@ export function PropertyTabs({ property, amenityIcons }: PropertyTabsProps) {
           
           <TabsContent value="features" className="mt-0">
             <PropertyFeatures features={property.features} amenityIcons={amenityIcons} />
+          </TabsContent>
+          
+          <TabsContent value="3dtour" className="mt-0">
+            <Property3DTour tour3dUrl={property.tour3dUrl} />
           </TabsContent>
           
           <TabsContent value="location" className="mt-0">
