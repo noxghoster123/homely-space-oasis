@@ -1,7 +1,6 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
@@ -31,41 +30,39 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <TooltipProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:id" element={<PropertyDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/sign-in" element={<SignIn />} />
-            <Route path="/sign-up" element={<SignUp />} />
-            <Route path="/agencies" element={<AgencyList />} />
-            <Route path="/agencies/:id" element={<AgencyDetail />} />
-            
-            {/* User routes */}
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/messages" element={<UserMessages />} />
-            
-            {/* Agent routes */}
-            <Route path="/agent/profile/:id" element={<AgentProfile />} />
-            <Route path="/agent/calendar" element={<AgentCalendar />} />
-            
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/properties" element={<AdminProperties />} />
-            <Route path="/admin/agencies" element={<AdminAgencies />} />
-            <Route path="/admin/agents" element={<AdminAgents />} />
-            <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/properties/:id" element={<PropertyDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/agencies" element={<AgencyList />} />
+          <Route path="/agencies/:id" element={<AgencyDetail />} />
+          
+          {/* User routes */}
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/messages" element={<UserMessages />} />
+          
+          {/* Agent routes */}
+          <Route path="/agent/profile/:id" element={<AgentProfile />} />
+          <Route path="/agent/calendar" element={<AgentCalendar />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/properties" element={<AdminProperties />} />
+          <Route path="/admin/agencies" element={<AdminAgencies />} />
+          <Route path="/admin/agents" element={<AdminAgents />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+        <Sonner />
       </BrowserRouter>
     </QueryClientProvider>
   );

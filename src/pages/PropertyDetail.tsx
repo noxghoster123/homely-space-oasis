@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -24,8 +23,13 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger,
+  TooltipProvider 
+} from "@/components/ui/tooltip";
 
-// Mock property data
 const property = {
   id: 1,
   title: "Luxury Villa with Private Pool",

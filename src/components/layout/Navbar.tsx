@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Search, Menu, X, User, Bell, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipTrigger,
+  TooltipProvider 
+} from "@/components/ui/tooltip";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
