@@ -1,505 +1,438 @@
-
 import { useState } from "react";
-import { format, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, parseISO } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, Plus, User } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { format, addMonths, subMonths, addDays, isToday, isSameMonth, isSameDay, parseISO } from "date-fns";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, User, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import { 
-  Dialog, DialogContent, DialogDescription, DialogFooter, 
-  DialogHeader, DialogTitle, DialogTrigger 
+  Dialog, DialogContent, DialogDescription, DialogHeader, 
+  DialogTitle, DialogTrigger, DialogFooter, DialogClose
 } from "@/components/ui/dialog";
-import { 
-  Popover, PopoverContent, PopoverTrigger 
-} from "@/components/ui/popover";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Layout } from "@/components/layout/Layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
+import { Layout } from "@/components/layout/Layout";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// Mock agent tours data
-const mockTours = [
+// Mock appointments data
+const mockAppointments = [
   {
     id: 1,
-    title: "Luxury Penthouse Tour",
-    date: "2023-07-05T14:00:00",
-    clientName: "John Smith",
-    clientPhone: "+1 (212) 555-7890",
-    clientEmail: "john.smith@example.com",
-    propertyId: 201,
-    propertyTitle: "Luxury Penthouse with Skyline Views",
-    propertyAddress: "123 Central Park West, New York, NY",
-    notes: "Client is interested in penthouse properties with views. Budget around $2.5M."
+    title: "Property Viewing",
+    propertyName: "Luxury Apartment in Downtown",
+    client: "Jennifer Adams",
+    date: "2023-08-12T14:00:00",
+    endTime: "2023-08-12T15:00:00",
+    location: "123 Main St, New York, NY",
+    status: "confirmed",
   },
   {
     id: 2,
-    title: "Waterfront Estate Viewing",
-    date: "2023-07-05T10:30:00",
-    clientName: "Emily Johnson",
-    clientPhone: "+1 (212) 555-1234",
-    clientEmail: "emily.johnson@example.com",
-    propertyId: 203,
-    propertyTitle: "Waterfront Estate with Private Dock",
-    propertyAddress: "456 Shoreline Drive, Hamptons, NY",
-    notes: "Client has a boat and is specifically looking for waterfront with dock access."
+    title: "Client Meeting",
+    propertyName: null,
+    client: "David Wilson",
+    date: "2023-08-12T10:30:00",
+    endTime: "2023-08-12T11:30:00",
+    location: "Office",
+    status: "confirmed",
   },
   {
     id: 3,
-    title: "Downtown Condo Tour",
-    date: "2023-07-08T13:00:00",
-    clientName: "Michael Wong",
-    clientPhone: "+1 (212) 555-5678",
-    clientEmail: "michael.wong@example.com",
-    propertyId: 202,
-    propertyTitle: "Modern Condo in Downtown",
-    propertyAddress: "789 Brooklyn Heights Blvd, Brooklyn, NY",
-    notes: "First-time buyer looking for a modern condo in Brooklyn with good transport links."
-  }
+    title: "Property Viewing",
+    propertyName: "Family Home with Garden",
+    client: "Michael Johnson",
+    date: "2023-08-14T15:30:00",
+    endTime: "2023-08-14T16:30:00",
+    location: "456 Oak St, Brooklyn, NY",
+    status: "confirmed",
+  },
+  {
+    id: 4,
+    title: "Property Valuation",
+    propertyName: "Downtown Loft",
+    client: "Emma Thompson",
+    date: "2023-08-15T13:00:00",
+    endTime: "2023-08-15T14:30:00",
+    location: "789 Broadway, New York, NY",
+    status: "confirmed",
+  },
+  {
+    id: 5,
+    title: "Client Meeting",
+    propertyName: null,
+    client: "Robert Brown",
+    date: "2023-08-17T11:00:00",
+    endTime: "2023-08-17T12:00:00",
+    location: "Virtual (Zoom)",
+    status: "pending",
+  },
 ];
 
-interface Tour {
-  id: number;
-  title: string;
-  date: string;
-  clientName: string;
-  clientPhone: string;
-  clientEmail: string;
-  propertyId: number;
-  propertyTitle: string;
-  propertyAddress: string;
-  notes: string;
-}
-
-const formatTime = (dateString: string) => {
-  return format(parseISO(dateString), "h:mm a");
+// Appointment status badge component
+const StatusBadge = ({ status }: { status: string }) => {
+  const getStatusColors = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+  
+  return (
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColors(status)}`}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
 };
 
 const AgentCalendar = () => {
   const { toast } = useToast();
-  const [date, setDate] = useState<Date>(new Date());
-  const [tours, setTours] = useState<Tour[]>(mockTours);
-  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
-  const [isNewTourDialogOpen, setIsNewTourDialogOpen] = useState(false);
-  const [newTour, setNewTour] = useState({
-    title: "",
-    date: format(new Date(), "yyyy-MM-dd"),
-    time: "10:00",
-    clientName: "",
-    clientPhone: "",
-    clientEmail: "",
-    propertyTitle: "",
-    propertyAddress: "",
-    notes: ""
-  });
+  const [appointments, setAppointments] = useState(mockAppointments);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-  // Filter tours for the selected date
-  const filteredTours = tours.filter(tour => 
-    isSameDay(parseISO(tour.date), date)
-  );
+  // Handler for navigating months
+  const handlePreviousMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
   
-  // Handler for tour creation
-  const handleCreateTour = () => {
-    const dateTime = `${newTour.date}T${newTour.time}:00`;
+  const handleNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
+  
+  // Get appointments for selected date
+  const getDayAppointments = (date: Date | undefined) => {
+    if (!date) return [];
     
-    const createdTour = {
-      id: tours.length + 1,
-      title: newTour.title,
-      date: dateTime,
-      clientName: newTour.clientName,
-      clientPhone: newTour.clientPhone,
-      clientEmail: newTour.clientEmail,
-      propertyId: Math.floor(Math.random() * 1000),
-      propertyTitle: newTour.propertyTitle,
-      propertyAddress: newTour.propertyAddress,
-      notes: newTour.notes
-    };
-    
-    setTours([...tours, createdTour]);
-    setIsNewTourDialogOpen(false);
-    
-    // Reset the form
-    setNewTour({
-      title: "",
-      date: format(new Date(), "yyyy-MM-dd"),
-      time: "10:00",
-      clientName: "",
-      clientPhone: "",
-      clientEmail: "",
-      propertyTitle: "",
-      propertyAddress: "",
-      notes: ""
-    });
-    
-    toast({
-      title: "Tour scheduled",
-      description: "The property tour has been added to your calendar.",
+    return appointments.filter((appointment) => {
+      const appointmentDate = parseISO(appointment.date);
+      return isSameDay(appointmentDate, date);
     });
   };
   
-  const handleNewTourInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewTour({
-      ...newTour,
-      [name]: value
+  const selectedDateAppointments = getDayAppointments(selectedDate);
+  
+  // Handler for appointment status update
+  const handleUpdateStatus = (id: number, status: string) => {
+    setAppointments(
+      appointments.map((appointment) =>
+        appointment.id === id ? { ...appointment, status } : appointment
+      )
+    );
+    
+    toast({
+      title: "Appointment updated",
+      description: `The appointment status has been updated to ${status}.`,
     });
   };
   
   return (
     <Layout>
       <div className="container px-6 py-8 mx-auto">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
-              <p className="text-gray-500 mt-1">Schedule and manage your property tours</p>
-            </div>
-            
-            <div className="mt-4 md:mt-0">
-              <Dialog open={isNewTourDialogOpen} onOpenChange={setIsNewTourDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Schedule Tour
+        <div className="flex flex-col lg:flex-row">
+          {/* Sidebar/Calendar */}
+          <div className="w-full lg:w-80 mb-8 lg:mb-0 lg:mr-8">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Calendar</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
+                    Today
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[550px]">
-                  <DialogHeader>
-                    <DialogTitle>Schedule New Property Tour</DialogTitle>
-                    <DialogDescription>
-                      Enter the details for the new property tour.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Tour Title</Label>
-                        <Input
-                          id="title"
-                          name="title"
-                          placeholder="E.g. Penthouse Viewing"
-                          value={newTour.title}
-                          onChange={handleNewTourInputChange}
-                        />
-                      </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="flex items-center justify-between px-6 py-3 border-t border-b">
+                  <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <h2 className="font-medium">{format(currentDate, "MMMM yyyy")}</h2>
+                  <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  month={currentDate}
+                  className="w-full rounded-none"
+                  classNames={{
+                    day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600",
+                    day_today: "bg-blue-100 text-blue-900",
+                  }}
+                  components={{
+                    DayContent: ({ date, ...props }) => {
+                      // Count appointments for this day
+                      const dayAppointments = appointments.filter((appointment) => {
+                        const appointmentDate = parseISO(appointment.date);
+                        return isSameDay(appointmentDate, date);
+                      });
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="date">Date</Label>
-                        <div className="flex space-x-2">
-                          <Input
-                            id="date"
-                            name="date"
-                            type="date"
-                            value={newTour.date}
-                            onChange={handleNewTourInputChange}
-                          />
-                          <Input
-                            id="time"
-                            name="time"
-                            type="time"
-                            value={newTour.time}
-                            onChange={handleNewTourInputChange}
-                          />
+                      const hasAppointments = dayAppointments.length > 0;
+                      const isCurrentMonth = isSameMonth(date, currentDate);
+                      
+                      return (
+                        <div 
+                          {...props}
+                          className={`relative ${!isCurrentMonth ? "text-gray-400" : ""}`}
+                        >
+                          {date.getDate()}
+                          {hasAppointments && isCurrentMonth && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                      );
+                    }
+                  }}
+                />
+              </CardContent>
+            </Card>
+            
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Upcoming</CardTitle>
+                <CardDescription>Your next 3 appointments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {appointments
+                    .filter(app => new Date(app.date) >= new Date())
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .slice(0, 3)
+                    .map(appointment => (
+                      <div key={appointment.id} className="border-l-4 border-blue-500 pl-4 py-2">
+                        <p className="font-medium">{appointment.title}</p>
+                        <p className="text-sm text-gray-500">{appointment.client}</p>
+                        <div className="flex items-center mt-1">
+                          <CalendarIcon className="h-3.5 w-3.5 mr-1 text-gray-500" />
+                          <span className="text-xs text-gray-500">
+                            {format(parseISO(appointment.date), "MMM d, h:mm a")}
+                          </span>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Client Information</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="clientName">Name</Label>
-                          <Input
-                            id="clientName"
-                            name="clientName"
-                            placeholder="Client name"
-                            value={newTour.clientName}
-                            onChange={handleNewTourInputChange}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="clientPhone">Phone</Label>
-                          <Input
-                            id="clientPhone"
-                            name="clientPhone"
-                            placeholder="Phone number"
-                            value={newTour.clientPhone}
-                            onChange={handleNewTourInputChange}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Label htmlFor="clientEmail">Email</Label>
-                          <Input
-                            id="clientEmail"
-                            name="clientEmail"
-                            type="email"
-                            placeholder="Email address"
-                            value={newTour.clientEmail}
-                            onChange={handleNewTourInputChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Property Information</h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label htmlFor="propertyTitle">Property Title</Label>
-                          <Input
-                            id="propertyTitle"
-                            name="propertyTitle"
-                            placeholder="Property title"
-                            value={newTour.propertyTitle}
-                            onChange={handleNewTourInputChange}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="propertyAddress">Address</Label>
-                          <Input
-                            id="propertyAddress"
-                            name="propertyAddress"
-                            placeholder="Property address"
-                            value={newTour.propertyAddress}
-                            onChange={handleNewTourInputChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notes</Label>
-                      <textarea
-                        id="notes"
-                        name="notes"
-                        placeholder="Additional notes about the client or tour"
-                        rows={3}
-                        className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        value={newTour.notes}
-                        onChange={handleNewTourInputChange}
-                      />
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsNewTourDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTour}>
-                      Schedule Tour
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Calendar Column */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+          {/* Main content */}
+          <div className="flex-1">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center justify-between">
+                  <div>
                     <CardTitle>
-                      {format(date, "MMMM yyyy")}
+                      {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "No date selected"}
                     </CardTitle>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setDate(new Date())}
-                      >
-                        <span className="sr-only">Go to today</span>
-                        <span className="text-xs">Today</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          const firstDayOfPreviousMonth = startOfMonth(
-                            new Date(date.getFullYear(), date.getMonth() - 1, 1)
-                          );
-                          setDate(firstDayOfPreviousMonth);
-                        }}
-                      >
-                        <span className="sr-only">Previous month</span>
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          const firstDayOfNextMonth = startOfMonth(
-                            new Date(date.getFullYear(), date.getMonth() + 1, 1)
-                          );
-                          setDate(firstDayOfNextMonth);
-                        }}
-                      >
-                        <span className="sr-only">Next month</span>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <CardDescription>
+                      {selectedDateAppointments.length} appointments
+                    </CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={(newDate) => newDate && setDate(newDate)}
-                      className="rounded-md border"
-                      components={{
-                        Day: ({ day, ...props }) => {
-                          // Check if there are tours on this day
-                          const hasTours = tours.some(tour => 
-                            isSameDay(parseISO(tour.date), day)
-                          );
-                          
-                          return (
-                            <div
-                              {...props}
-                              className={`relative ${props.className} ${hasTours ? 'font-bold' : ''}`}
-                            >
-                              {format(day, "d")}
-                              {hasTours && (
-                                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
-                              )}
-                            </div>
-                          );
-                        },
-                      }}
-                    />
-                    
-                    <div className="space-y-3">
-                      <h3 className="font-medium text-sm">Scheduled Tours for {format(date, "MMMM d, yyyy")}</h3>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="mt-4 md:mt-0">Add Appointment</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Appointment</DialogTitle>
+                        <DialogDescription>
+                          Create a new appointment on your calendar
+                        </DialogDescription>
+                      </DialogHeader>
                       
-                      {filteredTours.length > 0 ? (
-                        <div className="space-y-2">
-                          {filteredTours.map((tour) => (
-                            <div
-                              key={tour.id}
-                              className="bg-white border border-gray-200 rounded-md p-3 cursor-pointer hover:bg-gray-50"
-                              onClick={() => setSelectedTour(tour)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium">{tour.title}</h4>
-                                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                                    <Clock className="h-3.5 w-3.5 mr-1" />
-                                    {formatTime(tour.date)}
-                                  </div>
-                                </div>
-                                <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                  {tour.clientName}
-                                </div>
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500 mt-2">
-                                <MapPin className="h-3.5 w-3.5 mr-1" />
-                                {tour.propertyTitle}
-                              </div>
-                            </div>
-                          ))}
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Tabs defaultValue="viewing">
+                            <TabsList className="grid grid-cols-2">
+                              <TabsTrigger value="viewing">Property Viewing</TabsTrigger>
+                              <TabsTrigger value="meeting">Client Meeting</TabsTrigger>
+                            </TabsList>
+                          </Tabs>
                         </div>
-                      ) : (
-                        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-md p-6 text-center">
-                          <p className="text-gray-500">No tours scheduled for this date.</p>
-                          <Button 
-                            variant="outline" 
-                            className="mt-2"
-                            onClick={() => setIsNewTourDialogOpen(true)}
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Tour
-                          </Button>
+                        
+                        {/* Form fields would go here */}
+                        <div className="h-[300px] bg-gray-50 rounded flex items-center justify-center">
+                          <p className="text-gray-500 text-center">
+                            Appointment form fields would go here<br />
+                            (Title, Date, Time, Client, Property, etc.)
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Tour Details Column */}
-            <div>
-              <Card className="sticky top-20">
-                {selectedTour ? (
-                  <>
-                    <CardHeader>
-                      <CardTitle>{selectedTour.title}</CardTitle>
-                      <CardDescription className="flex items-center">
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        {format(parseISO(selectedTour.date), "EEEE, MMMM d, yyyy")} at {formatTime(selectedTour.date)}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-medium mb-2">Client Information</h3>
-                        <div className="bg-gray-50 rounded-md p-3 space-y-2">
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 text-gray-500 mr-2" />
+                      </div>
+                      
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button>Save Appointment</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              
+              <Separator />
+              
+              <CardContent className="py-6">
+                {selectedDateAppointments.length > 0 ? (
+                  <div className="space-y-6">
+                    {selectedDateAppointments
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map((appointment) => (
+                        <div
+                          key={appointment.id}
+                          className="flex flex-col md:flex-row bg-white border rounded-lg overflow-hidden"
+                        >
+                          {/* Time sidebar */}
+                          <div className="bg-gray-50 p-4 md:w-40 flex md:flex-col items-center md:items-start justify-between md:justify-start">
                             <div>
-                              <div className="font-medium">{selectedTour.clientName}</div>
-                              <div className="text-sm text-gray-500">{selectedTour.clientPhone}</div>
-                              <div className="text-sm text-gray-500">{selectedTour.clientEmail}</div>
+                              <div className="text-lg font-semibold">
+                                {format(parseISO(appointment.date), "h:mm a")}
+                              </div>
+                              <div className="text-gray-500 text-sm">
+                                {format(parseISO(appointment.endTime), "h:mm a")}
+                              </div>
+                            </div>
+                            <StatusBadge status={appointment.status} />
+                          </div>
+                          
+                          {/* Appointment details */}
+                          <div className="p-4 flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-semibold text-lg">{appointment.title}</h3>
+                                {appointment.propertyName && (
+                                  <p className="text-gray-600 mt-1">{appointment.propertyName}</p>
+                                )}
+                              </div>
+                              
+                              <div className="flex space-x-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm">Reschedule</Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Reschedule Appointment</DialogTitle>
+                                      <DialogDescription>
+                                        Change the date and time for this appointment
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    
+                                    <div className="h-[300px] bg-gray-50 rounded flex items-center justify-center mt-4">
+                                      <p className="text-gray-500 text-center">
+                                        Date and time picker would go here
+                                      </p>
+                                    </div>
+                                    
+                                    <DialogFooter className="mt-4">
+                                      <DialogClose asChild>
+                                        <Button variant="outline">Cancel</Button>
+                                      </DialogClose>
+                                      <Button>Save Changes</Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
+                                
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem 
+                                      onClick={() => handleUpdateStatus(appointment.id, "confirmed")}
+                                    >
+                                      Mark as Confirmed
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleUpdateStatus(appointment.id, "completed")}
+                                    >
+                                      Mark as Completed
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleUpdateStatus(appointment.id, "cancelled")}
+                                      className="text-red-600"
+                                    >
+                                      Cancel Appointment
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4 space-y-2">
+                              <div className="flex items-center text-gray-600">
+                                <User className="h-4 w-4 mr-2" />
+                                <span>{appointment.client}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                <span>{appointment.location}</span>
+                              </div>
+                              <div className="flex items-center text-gray-600">
+                                <Clock className="h-4 w-4 mr-2" />
+                                <span>
+                                  {format(parseISO(appointment.date), "h:mm a")} - {format(parseISO(appointment.endTime), "h:mm a")} 
+                                  ({Math.round((new Date(appointment.endTime).getTime() - new Date(appointment.date).getTime()) / 1000 / 60)} min)
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium mb-2">Property</h3>
-                        <div className="bg-gray-50 rounded-md p-3">
-                          <div className="font-medium">{selectedTour.propertyTitle}</div>
-                          <div className="text-sm text-gray-500 flex items-center mt-1">
-                            <MapPin className="h-3.5 w-3.5 mr-1" />
-                            {selectedTour.propertyAddress}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {selectedTour.notes && (
-                        <div>
-                          <h3 className="text-sm font-medium mb-2">Notes</h3>
-                          <div className="bg-gray-50 rounded-md p-3">
-                            <p className="text-sm text-gray-600">{selectedTour.notes}</p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <Button variant="outline" onClick={() => setSelectedTour(null)}>
-                        Close
-                      </Button>
-                      <div className="space-x-2">
-                        <Button>
-                          Edit Tour
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </>
+                      ))}
+                  </div>
                 ) : (
-                  <CardContent className="p-6 text-center">
-                    <div className="py-12">
-                      <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No tour selected</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Select a tour from the calendar to view details or schedule a new tour.
-                      </p>
-                      <Button 
-                        className="mt-4"
-                        onClick={() => setIsNewTourDialogOpen(true)}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Schedule Tour
-                      </Button>
-                    </div>
-                  </CardContent>
+                  <div className="text-center py-12">
+                    <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900">No appointments</h3>
+                    <p className="text-gray-500 mt-1">
+                      You have no appointments scheduled for this day.
+                    </p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="mt-4">Add Appointment</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add New Appointment</DialogTitle>
+                          <DialogDescription>
+                            Create a new appointment on your calendar
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="h-[300px] bg-gray-50 rounded flex items-center justify-center mt-4">
+                          <p className="text-gray-500 text-center">
+                            Appointment form fields would go here
+                          </p>
+                        </div>
+                        
+                        <DialogFooter className="mt-4">
+                          <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                          </DialogClose>
+                          <Button>Save Appointment</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 )}
-              </Card>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

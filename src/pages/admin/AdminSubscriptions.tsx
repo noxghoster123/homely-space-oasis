@@ -1,228 +1,248 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { 
-  ArrowUpDown, Check, CreditCard, DollarSign, Edit, Sparkles, 
-  Star, Users, Wallet, 
+  ArrowUpDown, Check, CheckCircle, Edit, Eye, Plus, Search, Trash, CreditCard
 } from "lucide-react";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+import { 
+  Dialog, DialogContent, DialogDescription, DialogFooter, 
+  DialogHeader, DialogTitle, DialogTrigger 
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AdminLayout from "@/components/admin/AdminLayout";
 
-// Mock data for subscription plans
+// Mock data for subscriptions
+const mockSubscriptions = [
+  {
+    id: 1,
+    agency: {
+      id: 1,
+      name: "Elite Real Estate Group",
+      logo: "https://via.placeholder.com/40"
+    },
+    plan: "premium",
+    price: "$99.99",
+    status: "active",
+    startDate: "2023-01-15",
+    endDate: "2024-01-15",
+    paymentMethod: "Credit Card",
+    lastPayment: "2023-07-15",
+  },
+  {
+    id: 2,
+    agency: {
+      id: 2,
+      name: "City Properties Inc.",
+      logo: "https://via.placeholder.com/40"
+    },
+    plan: "standard",
+    price: "$49.99",
+    status: "active",
+    startDate: "2023-02-10",
+    endDate: "2024-02-10",
+    paymentMethod: "PayPal",
+    lastPayment: "2023-07-10",
+  },
+  {
+    id: 3,
+    agency: {
+      id: 3,
+      name: "Sunshine Realty",
+      logo: "https://via.placeholder.com/40"
+    },
+    plan: "standard",
+    price: "$49.99",
+    status: "active",
+    startDate: "2023-03-22",
+    endDate: "2024-03-22",
+    paymentMethod: "Credit Card",
+    lastPayment: "2023-07-22",
+  },
+  {
+    id: 4,
+    agency: {
+      id: 4,
+      name: "Golden Gate Properties",
+      logo: "https://via.placeholder.com/40"
+    },
+    plan: "golden",
+    price: "$199.99",
+    status: "active",
+    startDate: "2023-05-05",
+    endDate: "2024-05-05",
+    paymentMethod: "Bank Transfer",
+    lastPayment: "2023-07-05",
+  },
+  {
+    id: 5,
+    agency: {
+      id: 5,
+      name: "Mountain View Estates",
+      logo: "https://via.placeholder.com/40"
+    },
+    plan: "standard",
+    price: "$49.99",
+    status: "inactive",
+    startDate: "2023-01-20",
+    endDate: "2024-01-20",
+    paymentMethod: "Credit Card",
+    lastPayment: "2023-06-20",
+  },
+];
+
 const subscriptionPlans = [
   {
     id: "standard",
-    name: "Standard",
-    price: "$99/month",
-    color: "blue",
+    name: "Standard Plan",
+    description: "Basic features for small real estate agencies",
+    price: "$49.99",
     features: [
       "List up to 20 properties",
-      "Up to 5 agent profiles",
+      "5 agent accounts",
       "Basic analytics",
       "Email support",
-      "Standard listing placement"
-    ]
+      "Property image gallery",
+    ],
+    color: "blue",
   },
   {
     id: "premium",
-    name: "Premium",
-    price: "$199/month",
-    color: "purple",
+    name: "Premium Plan",
+    description: "Advanced features for growing agencies",
+    price: "$99.99",
     features: [
       "List up to 50 properties",
-      "Up to 15 agent profiles",
+      "15 agent accounts",
       "Advanced analytics",
       "Priority email & phone support",
-      "Featured listing placement",
-      "Social media promotion"
-    ]
+      "Virtual property tours",
+      "Featured property listings",
+    ],
+    color: "purple",
+    recommended: true,
   },
   {
     id: "golden",
-    name: "Golden",
-    price: "$349/month",
-    color: "yellow",
+    name: "Golden Plan",
+    description: "Enterprise features for large agencies",
+    price: "$199.99",
     features: [
-      "Unlimited properties",
-      "Unlimited agent profiles",
-      "Premium analytics & reporting",
+      "Unlimited property listings",
+      "Unlimited agent accounts",
+      "Premium analytics with market insights",
       "24/7 dedicated support",
-      "Top listing placement",
-      "Social media promotion",
-      "Virtual tours",
-      "Custom branded pages"
-    ]
-  }
+      "Virtual property tours",
+      "Featured property listings",
+      "Custom branding",
+      "API access",
+    ],
+    color: "yellow",
+  },
 ];
 
-// Mock data for subscription transactions
-const mockTransactions = [
-  {
-    id: "tx-001",
-    date: "2023-06-15",
+// Type for subscription change dialog
+type SubscriptionChangeDialogProps = {
+  subscription: {
+    id: number;
     agency: {
-      id: 1,
-      name: "Elite Real Estate Group"
-    },
-    plan: "premium",
-    amount: "$199.00",
-    status: "completed",
-    paymentMethod: "Credit Card"
-  },
-  {
-    id: "tx-002",
-    date: "2023-06-14",
-    agency: {
-      id: 4,
-      name: "Golden Gate Properties"
-    },
-    plan: "golden",
-    amount: "$349.00",
-    status: "completed",
-    paymentMethod: "PayPal"
-  },
-  {
-    id: "tx-003",
-    date: "2023-06-10",
-    agency: {
-      id: 2,
-      name: "City Properties Inc."
-    },
-    plan: "standard",
-    amount: "$99.00",
-    status: "completed",
-    paymentMethod: "Credit Card"
-  },
-  {
-    id: "tx-004",
-    date: "2023-06-05",
-    agency: {
-      id: 3,
-      name: "Sunshine Realty"
-    },
-    plan: "standard",
-    amount: "$99.00",
-    status: "completed",
-    paymentMethod: "Bank Transfer"
-  },
-  {
-    id: "tx-005",
-    date: "2023-06-01",
-    agency: {
-      id: 1,
-      name: "Elite Real Estate Group"
-    },
-    plan: "premium",
-    amount: "$199.00",
-    status: "failed",
-    paymentMethod: "Credit Card"
-  }
-];
-
-// Subscription metrics
-const subscriptionMetrics = {
-  totalRevenue: "$12,450",
-  activeSubscriptions: 38,
-  churnRate: "4.2%",
-  mostPopularPlan: "Premium"
+      id: number;
+      name: string;
+    };
+    plan: string;
+  };
+  onChangePlan: (id: number, plan: string) => void;
 };
 
-// Edit Plan Dialog Component
-const EditPlanDialog = ({ plan }: { plan: typeof subscriptionPlans[0] }) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: plan.name,
-    price: plan.price.replace(/\$|\//g, ""),
-    features: plan.features.join("\n")
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = () => {
-    // Here you would update the subscription plan in your backend
-    console.log("Updated plan:", formData);
-    
-    toast({
-      title: "Plan updated",
-      description: `The ${plan.name} plan has been updated successfully.`,
-    });
-  };
-
+// Subscription change dialog component
+const SubscriptionChangeDialog = ({ 
+  subscription, 
+  onChangePlan 
+}: SubscriptionChangeDialogProps) => {
+  const [plan, setPlan] = useState(subscription.plan);
+  
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
+        <Button variant="ghost" size="icon">
+          <Edit className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Subscription Plan</DialogTitle>
+          <DialogTitle>Change Subscription Plan</DialogTitle>
           <DialogDescription>
-            Make changes to the {plan.name} subscription plan.
+            Update the subscription plan for {subscription.agency.name}
           </DialogDescription>
         </DialogHeader>
+        
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">
-              Price ($)
-            </Label>
-            <Input
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="features" className="text-right">
-              Features
-            </Label>
-            <div className="col-span-3">
-              <textarea
-                id="features"
-                name="features"
-                value={formData.features}
-                onChange={handleChange}
-                rows={6}
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="One feature per line"
-              />
-              <p className="text-sm text-gray-500 mt-2">Enter each feature on a new line</p>
+          <div className="grid grid-cols-1 gap-4">
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer ${
+                plan === 'standard' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              }`}
+              onClick={() => setPlan('standard')}
+            >
+              {plan === 'standard' && (
+                <CheckCircle className="h-5 w-5 text-blue-500" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium">Standard Plan</h3>
+                <p className="text-sm text-gray-500">Basic features for small agencies</p>
+                <p className="text-sm font-medium text-gray-700 mt-1">$49.99/month</p>
+              </div>
+            </div>
+            
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer ${
+                plan === 'premium' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+              }`}
+              onClick={() => setPlan('premium')}
+            >
+              {plan === 'premium' && (
+                <CheckCircle className="h-5 w-5 text-purple-500" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium">Premium Plan</h3>
+                <p className="text-sm text-gray-500">Advanced features for growing agencies</p>
+                <p className="text-sm font-medium text-gray-700 mt-1">$99.99/month</p>
+              </div>
+            </div>
+            
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer ${
+                plan === 'golden' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'
+              }`}
+              onClick={() => setPlan('golden')}
+            >
+              {plan === 'golden' && (
+                <CheckCircle className="h-5 w-5 text-yellow-500" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium">Golden Plan</h3>
+                <p className="text-sm text-gray-500">Premium features for enterprise agencies</p>
+                <p className="text-sm font-medium text-gray-700 mt-1">$199.99/month</p>
+              </div>
             </div>
           </div>
         </div>
+        
         <DialogFooter>
-          <Button onClick={handleSubmit}>Save changes</Button>
+          <Button 
+            onClick={() => onChangePlan(subscription.id, plan)}
+          >
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -231,228 +251,234 @@ const EditPlanDialog = ({ plan }: { plan: typeof subscriptionPlans[0] }) => {
 
 const AdminSubscriptions = () => {
   const { toast } = useToast();
+  const [subscriptions, setSubscriptions] = useState(mockSubscriptions);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Filter subscriptions based on search term
+  const filteredSubscriptions = subscriptions.filter(subscription => 
+    subscription.agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subscription.plan.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Handle subscription plan change
+  const handleChangePlan = (id: number, plan: string) => {
+    setSubscriptions(prevSubscriptions => 
+      prevSubscriptions.map(subscription => 
+        subscription.id === id ? { ...subscription, plan } : subscription
+      )
+    );
+    
+    toast({
+      title: "Subscription plan updated",
+      description: "The agency's subscription plan has been updated successfully.",
+    });
+  };
+  
+  // Handle subscription status toggle
+  const handleToggleStatus = (id: number) => {
+    setSubscriptions(prevSubscriptions => 
+      prevSubscriptions.map(subscription => 
+        subscription.id === id 
+          ? { ...subscription, status: subscription.status === 'active' ? 'inactive' : 'active' } 
+          : subscription
+      )
+    );
+    
+    const subscription = subscriptions.find(s => s.id === id);
+    const newStatus = subscription?.status === 'active' ? 'inactive' : 'active';
+    
+    toast({
+      title: `Subscription ${newStatus}`,
+      description: `The subscription for ${subscription?.agency.name} has been ${newStatus === 'active' ? 'activated' : 'deactivated'}.`,
+    });
+  };
   
   return (
     <AdminLayout>
       <div className="container px-6 py-8 mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Subscriptions</h1>
-            <p className="text-gray-500 mt-1">Manage subscription plans and transactions</p>
+            <p className="text-gray-500 mt-1">Manage agency subscription plans</p>
+          </div>
+          
+          <div className="mt-4 lg:mt-0 flex space-x-2">
+            <Button className="whitespace-nowrap">
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Plan
+            </Button>
           </div>
         </div>
         
-        <Tabs defaultValue="plans">
-          <TabsList className="mb-6">
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          </TabsList>
-          
-          {/* Plans Tab */}
-          <TabsContent value="plans">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {subscriptionPlans.map((plan) => (
-                <Card key={plan.id} className={`border-${plan.color}-200 hover:shadow-md transition-shadow`}>
-                  <CardHeader className={`bg-${plan.color}-50 border-b border-${plan.color}-100`}>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className={`text-${plan.color}-700`}>{plan.name}</CardTitle>
-                      {plan.id === "golden" && (
-                        <Sparkles className="h-5 w-5 text-yellow-500" />
-                      )}
-                    </div>
-                    <CardDescription className="text-2xl font-bold">{plan.price}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="space-y-2">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start">
-                          <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <div className="mt-6 pt-4 border-t flex justify-between items-center">
-                      <EditPlanDialog plan={plan} />
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <ArrowUpDown className="h-4 w-4 mr-2" />
-                            Actions
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Users className="mr-2 h-4 w-4" />
-                            View Subscribers
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Star className="mr-2 h-4 w-4" />
-                            Make Default
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Discontinue Plan
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        <Tabs defaultValue="active">
+          <div className="flex items-center justify-between mb-6">
+            <TabsList>
+              <TabsTrigger value="active">Active Subscriptions</TabsTrigger>
+              <TabsTrigger value="plans">Subscription Plans</TabsTrigger>
+            </TabsList>
             
-            <div className="mt-8">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create New Plan
-              </Button>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                type="search"
+                placeholder="Search subscriptions..."
+                className="pl-9 w-full md:w-64"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          </TabsContent>
+          </div>
           
-          {/* Transactions Tab */}
-          <TabsContent value="transactions">
+          <TabsContent value="active">
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Transaction ID</TableHead>
-                    <TableHead>Agency</TableHead>
+                    <TableHead className="w-[250px]">Agency</TableHead>
                     <TableHead>Plan</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
                     <TableHead>Payment Method</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{transaction.date}</TableCell>
-                      <TableCell className="font-mono text-sm">{transaction.id}</TableCell>
-                      <TableCell className="font-medium">{transaction.agency.name}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          transaction.plan === 'golden' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : transaction.plan === 'premium' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {transaction.plan.charAt(0).toUpperCase() + transaction.plan.slice(1)}
-                        </span>
-                      </TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          {transaction.paymentMethod === 'Credit Card' ? (
-                            <CreditCard className="h-4 w-4 mr-2 text-gray-500" />
-                          ) : transaction.paymentMethod === 'PayPal' ? (
-                            <Wallet className="h-4 w-4 mr-2 text-gray-500" />
-                          ) : (
-                            <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
-                          )}
-                          {transaction.paymentMethod}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          transaction.status === 'completed' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </span>
+                  {filteredSubscriptions.length > 0 ? (
+                    filteredSubscriptions.map((subscription) => (
+                      <TableRow key={subscription.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            <img 
+                              src={subscription.agency.logo} 
+                              alt={subscription.agency.name} 
+                              className="w-8 h-8 rounded-full"
+                            />
+                            <span>{subscription.agency.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            subscription.plan === 'golden' 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : subscription.plan === 'premium' 
+                              ? 'bg-purple-100 text-purple-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)}
+                          </span>
+                        </TableCell>
+                        <TableCell>{subscription.price}</TableCell>
+                        <TableCell>{new Date(subscription.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(subscription.endDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{subscription.paymentMethod}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant={subscription.status === 'active' ? "default" : "outline"}
+                            size="sm"
+                            className={subscription.status === 'active' ? "bg-green-500 hover:bg-green-600" : "text-gray-500"}
+                            onClick={() => handleToggleStatus(subscription.id)}
+                          >
+                            {subscription.status === 'active' ? (
+                              <>
+                                <Check className="mr-1 h-4 w-4" />
+                                Active
+                              </>
+                            ) : (
+                              "Inactive"
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <SubscriptionChangeDialog 
+                              subscription={subscription} 
+                              onChangePlan={handleChangePlan}
+                            />
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <ArrowUpDown className="h-4 w-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link to={`/admin/subscriptions/${subscription.id}/details`}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Details
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link to={`/admin/subscriptions/${subscription.id}/billing`}>
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    Billing History
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-red-600">
+                                  <Trash className="mr-2 h-4 w-4" />
+                                  Cancel Subscription
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-6 text-gray-500">
+                        No subscriptions found matching your search.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
           </TabsContent>
           
-          {/* Metrics Tab */}
-          <TabsContent value="metrics">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                      <h3 className="text-2xl font-bold">{subscriptionMetrics.totalRevenue}</h3>
+          <TabsContent value="plans">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {subscriptionPlans.map((plan) => (
+                <div 
+                  key={plan.id}
+                  className={`bg-white rounded-lg shadow-sm border ${
+                    plan.recommended 
+                      ? 'border-purple-500 ring-2 ring-purple-200' 
+                      : 'border-gray-200'
+                  }`}
+                >
+                  <div className="p-6">
+                    {plan.recommended && (
+                      <span className="inline-block px-3 py-1 text-xs font-medium text-purple-800 bg-purple-100 rounded-full mb-4">
+                        Recommended
+                      </span>
+                    )}
+                    
+                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                    <p className="text-gray-500 mt-1">{plan.description}</p>
+                    
+                    <div className="mt-4">
+                      <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+                      <span className="text-gray-500 ml-1">/month</span>
                     </div>
-                    <div className="p-2 bg-green-100 rounded-full">
-                      <DollarSign className="h-6 w-6 text-green-600" />
-                    </div>
+                    
+                    <ul className="mt-6 space-y-3">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start">
+                          <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <Button className="w-full mt-8">
+                      Edit Plan
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Active Subscriptions</p>
-                      <h3 className="text-2xl font-bold">{subscriptionMetrics.activeSubscriptions}</h3>
-                    </div>
-                    <div className="p-2 bg-blue-100 rounded-full">
-                      <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Churn Rate</p>
-                      <h3 className="text-2xl font-bold">{subscriptionMetrics.churnRate}</h3>
-                    </div>
-                    <div className="p-2 bg-red-100 rounded-full">
-                      <ArrowUpDown className="h-6 w-6 text-red-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Popular Plan</p>
-                      <h3 className="text-2xl font-bold">{subscriptionMetrics.mostPopularPlan}</h3>
-                    </div>
-                    <div className="p-2 bg-purple-100 rounded-full">
-                      <Star className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Charts and additional metrics would go here */}
-            <div className="mt-8 bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Subscription Growth</h3>
-              <div className="h-64 flex items-center justify-center border border-dashed border-gray-300 rounded-md">
-                <p className="text-gray-500">Subscription growth chart will be displayed here</p>
-              </div>
-            </div>
-            
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium mb-4">Plan Distribution</h3>
-                <div className="h-64 flex items-center justify-center border border-dashed border-gray-300 rounded-md">
-                  <p className="text-gray-500">Plan distribution chart will be displayed here</p>
                 </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium mb-4">Monthly Revenue</h3>
-                <div className="h-64 flex items-center justify-center border border-dashed border-gray-300 rounded-md">
-                  <p className="text-gray-500">Monthly revenue chart will be displayed here</p>
-                </div>
-              </div>
+              ))}
             </div>
           </TabsContent>
         </Tabs>
